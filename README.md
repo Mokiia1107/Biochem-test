@@ -1,73 +1,118 @@
-# React + TypeScript + Vite
+# 生化刷题神器 🧬
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个用于**生物化学与分子生物学**期末复习的刷题网页，根据老师给的期末练习题整理制作。
 
-Currently, two official plugins are available:
+题库共 **92 题**，分三种题型：
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| 题型 | 数量 | 练习方式 |
+| --- | --- | --- |
+| 选择题 | 60 题 | 点击作答，即时判对错并查看解析 |
+| 名词解释 | 20 题 | 输入答案，对比标准解析 |
+| 问答题 | 12 题 | 输入答案，对照完整参考答案 |
 
-## React Compiler
+答题进度会自动保存在**本地浏览器**中，不会上传到任何服务器，可创建多个「答题档案」分别记录。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 一、快速开始（推荐）
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+如果你只是想刷题，最简单的方式：
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 1. 安装 Node.js
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+先确认电脑上装了 [Node.js](https://nodejs.org/)（建议 18 或更高版本）。打开终端检查：
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+node -v
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+能显示版本号（如 `v20.x.x`）即可。
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 2. 安装依赖
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+在终端进入本项目文件夹（即 `README.md` 所在目录），运行：
+
+```bash
+npm install
 ```
+
+> 首次安装会下载依赖，需要联网，耗时几分钟属正常。
+
+### 3. 启动网页
+
+```bash
+npm run dev
+```
+
+启动后终端会显示一个本地网址，通常是：
+
+```
+http://localhost:5173
+```
+
+按住 Ctrl（Mac 为 Cmd）点击该链接，或手动复制到浏览器打开即可开始刷题。
+
+> 想停止运行：在终端按 `Ctrl + C`。
+
+---
+
+## 二、如何刷题
+
+1. **创建档案**：首次进入点击「+ 新建档案」，输入一个名字（如「第一遍」）。必须先有档案才能开始刷题。
+2. **选择题型**：在首页选择「选择题 / 名词解释 / 问答题」进入对应练习。
+3. **作答**：
+   - 选择题：点击选项即时判对错，并显示解析。
+   - 名词解释 / 问答题：在输入框写下自己的答案，再点击对照标准答案查漏补缺。
+4. **查看进度**：首页可看到已作答题数与完成百分比，点击「已作答」卡片进入统计页。
+5. **多档案管理**：点击「管理档案」可新建、切换、删除不同档案——适合多轮复习对比。
+
+> 💡 答题数据保存在浏览器本地存储（localStorage）中。换浏览器、换电脑或清除浏览器数据会导致进度丢失。
+
+---
+
+## 三、构建为可部署的静态网页（可选）
+
+如果想把它打包成静态文件部署到网络（如 GitHub Pages、Vercel 等）：
+
+```bash
+npm run build      # 打包，产物在 dist/ 目录
+npm run preview    # 本地预览打包后的效果
+```
+
+将 `dist/` 目录里的内容上传到任意静态托管平台即可。
+
+---
+
+## 四、修改题库
+
+所有题目都集中在一个文件里，方便增删改：
+
+```
+src/data/questions.ts
+```
+
+文件中按题型分为 `choiceQuestions`、`definitionQuestions`、`essayQuestions` 三组数组，照着已有题目的格式增改即可，保存后网页会自动热更新。
+
+---
+
+## 五、技术栈
+
+- React 19 + TypeScript
+- Vite（开发与构建）
+- Tailwind CSS + shadcn/ui（界面组件）
+
+主要目录结构：
+
+```
+src/
+  App.tsx              根组件，负责页面路由
+  data/questions.ts    题库（在此增删改题目）
+  sections/            各页面：首页、选择题、名词解释、问答题、统计、档案管理
+  hooks/               useQuiz（答题逻辑）、useSaveManager（存档逻辑）
+  types/index.ts       数据类型定义
+  components/ui/        shadcn/ui 通用组件
+```
+
+---
+
+祝复习顺利，逢考必过！📚✨
