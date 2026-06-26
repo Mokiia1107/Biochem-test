@@ -9,11 +9,14 @@ import {
   RotateCcw,
   HelpCircle,
   GraduationCap,
+  ArrowDownUp,
+  Shuffle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { choiceQuestions } from '@/data/questions';
+import { seededShuffle } from '@/lib/utils';
 import type { PageRoute, UserAnswer } from '@/types';
 
 interface ChoiceQuizProps {
@@ -33,21 +36,28 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [filter, setFilter] = useState<'all' | 'wrong' | 'unanswered'>('all');
   const [showList, setShowList] = useState(false);
+  const [order, setOrder] = useState<'sequential' | 'random'>('sequential');
+  const [shuffleSeed, setShuffleSeed] = useState(() => Date.now());
+
+  const orderedBase = useMemo(() => {
+    return order === 'random'
+      ? seededShuffle(choiceQuestions, shuffleSeed)
+      : choiceQuestions;
+  }, [order, shuffleSeed]);
 
   const questions = useMemo(() => {
-    if (filter === 'all') return choiceQuestions;
     if (filter === 'wrong') {
-      return choiceQuestions.filter(
+      return orderedBase.filter(
         q => quiz.getUserAnswer(q.id)?.status === 'wrong'
       );
     }
     if (filter === 'unanswered') {
-      return choiceQuestions.filter(
+      return orderedBase.filter(
         q => !quiz.getUserAnswer(q.id)
       );
     }
-    return choiceQuestions;
-  }, [filter, quiz]);
+    return orderedBase;
+  }, [filter, orderedBase, quiz]);
 
   const currentQ = questions[currentIdx] || choiceQuestions[0];
   const userAnswer = quiz.getUserAnswer(currentQ.id);
@@ -174,7 +184,7 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-6">
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           {(['all', 'unanswered', 'wrong'] as const).map(f => (
             <button
               key={f}
@@ -190,6 +200,44 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
               {f === 'wrong' && '错题'}
             </button>
           ))}
+
+          {/* Order toggle */}
+          <div className="flex items-center rounded-full border bg-white p-0.5 ml-1">
+            <button
+              onClick={() => { setOrder('sequential'); setCurrentIdx(0); }}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                order === 'sequential'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <ArrowDownUp className="w-3.5 h-3.5" />
+              顺序
+            </button>
+            <button
+              onClick={() => { setOrder('random'); setShuffleSeed(Date.now()); setCurrentIdx(0); }}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                order === 'random'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Shuffle className="w-3.5 h-3.5" />
+              乱序
+            </button>
+          </div>
+          {order === 'random' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setShuffleSeed(Date.now()); setCurrentIdx(0); }}
+              className="text-slate-400"
+            >
+              <Shuffle className="w-3.5 h-3.5 mr-1" />
+              重新打乱
+            </Button>
+          )}
+
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={handleReset} className="text-slate-400">
             <RotateCcw className="w-3.5 h-3.5 mr-1" />

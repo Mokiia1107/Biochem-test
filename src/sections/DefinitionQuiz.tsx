@@ -8,12 +8,15 @@ import {
   Eye,
   RotateCcw,
   PenLine,
+  ArrowDownUp,
+  Shuffle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { definitionQuestions } from '@/data/questions';
+import { seededShuffle } from '@/lib/utils';
 import type { PageRoute, UserAnswer } from '@/types';
 
 interface DefinitionQuizProps {
@@ -33,19 +36,26 @@ export function DefinitionQuiz({ quiz, onNavigate, saveMgr }: DefinitionQuizProp
   const [showAnswer, setShowAnswer] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unanswered' | 'reviewed'>('all');
   const [showList, setShowList] = useState(false);
+  const [order, setOrder] = useState<'sequential' | 'random'>('sequential');
+  const [shuffleSeed, setShuffleSeed] = useState(() => Date.now());
+
+  const orderedBase = useMemo(() => {
+    return order === 'random'
+      ? seededShuffle(definitionQuestions, shuffleSeed)
+      : definitionQuestions;
+  }, [order, shuffleSeed]);
 
   const questions = useMemo(() => {
-    if (filter === 'all') return definitionQuestions;
     if (filter === 'reviewed') {
-      return definitionQuestions.filter(
+      return orderedBase.filter(
         q => quiz.getUserAnswer(q.id)?.status === 'reviewed'
       );
     }
     if (filter === 'unanswered') {
-      return definitionQuestions.filter(q => !quiz.getUserAnswer(q.id));
+      return orderedBase.filter(q => !quiz.getUserAnswer(q.id));
     }
-    return definitionQuestions;
-  }, [filter, quiz]);
+    return orderedBase;
+  }, [filter, orderedBase, quiz]);
 
   const currentQ = questions[currentIdx] || definitionQuestions[0];
   const userAnswer = quiz.getUserAnswer(currentQ.id);
@@ -173,7 +183,7 @@ export function DefinitionQuiz({ quiz, onNavigate, saveMgr }: DefinitionQuizProp
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           {(['all', 'unanswered', 'reviewed'] as const).map(f => (
             <button
               key={f}
@@ -189,6 +199,44 @@ export function DefinitionQuiz({ quiz, onNavigate, saveMgr }: DefinitionQuizProp
               {f === 'reviewed' && '已练习'}
             </button>
           ))}
+
+          {/* Order toggle */}
+          <div className="flex items-center rounded-full border bg-white p-0.5 ml-1">
+            <button
+              onClick={() => { setOrder('sequential'); setCurrentIdx(0); }}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                order === 'sequential'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <ArrowDownUp className="w-3.5 h-3.5" />
+              顺序
+            </button>
+            <button
+              onClick={() => { setOrder('random'); setShuffleSeed(Date.now()); setCurrentIdx(0); }}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                order === 'random'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Shuffle className="w-3.5 h-3.5" />
+              乱序
+            </button>
+          </div>
+          {order === 'random' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setShuffleSeed(Date.now()); setCurrentIdx(0); }}
+              className="text-slate-400"
+            >
+              <Shuffle className="w-3.5 h-3.5 mr-1" />
+              重新打乱
+            </Button>
+          )}
+
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={handleReset} className="text-slate-400">
             <RotateCcw className="w-3.5 h-3.5 mr-1" />
