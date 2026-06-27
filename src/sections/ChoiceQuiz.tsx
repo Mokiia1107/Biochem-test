@@ -11,6 +11,7 @@ import {
   GraduationCap,
   ArrowDownUp,
   Shuffle,
+  Dices,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,6 +39,8 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
   const [showList, setShowList] = useState(false);
   const [order, setOrder] = useState<'sequential' | 'random'>('sequential');
   const [shuffleSeed, setShuffleSeed] = useState(() => Date.now());
+  const [shuffleOptions, setShuffleOptions] = useState(false);
+  const [optionSeed, setOptionSeed] = useState(() => Date.now());
 
   const orderedBase = useMemo(() => {
     return order === 'random'
@@ -60,6 +63,18 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
   }, [filter, orderedBase, quiz]);
 
   const currentQ = questions[currentIdx] || choiceQuestions[0];
+
+  // 选项乱序：每题用 optionSeed + 题目 id 作为种子，
+  // 保证同一题在多次渲染中顺序稳定，但「重新打乱」时会变化。
+  // displayOptions 中保留每个选项的原始索引，用于答题判定与记录。
+  const displayOptions = useMemo(() => {
+    const withIdx = currentQ.options.map((text, originalIdx) => ({ text, originalIdx }));
+    if (shuffleOptions) {
+      return seededShuffle(withIdx, optionSeed + currentQ.id);
+    }
+    return withIdx;
+  }, [currentQ, shuffleOptions, optionSeed]);
+
   const userAnswer = quiz.getUserAnswer(currentQ.id);
   const hasAnswered = userAnswer?.status === 'correct' || userAnswer?.status === 'wrong';
   const isCorrect = userAnswer?.status === 'correct';
@@ -238,6 +253,36 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
             </Button>
           )}
 
+          {/* Option shuffle toggle */}
+          <button
+            onClick={() => {
+              setShuffleOptions(prev => {
+                const next = !prev;
+                if (next) setOptionSeed(Date.now());
+                return next;
+              });
+            }}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+              shuffleOptions
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Dices className="w-3.5 h-3.5" />
+            选项乱序
+          </button>
+          {shuffleOptions && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setOptionSeed(Date.now())}
+              className="text-slate-400"
+            >
+              <Shuffle className="w-3.5 h-3.5 mr-1" />
+              重排选项
+            </Button>
+          )}
+
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={handleReset} className="text-slate-400">
             <RotateCcw className="w-3.5 h-3.5 mr-1" />
@@ -280,9 +325,9 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
 
             {/* Options */}
             <div className="space-y-3">
-              {currentQ.options.map((option, idx) => {
-                const isSelected = userAnswer?.answer === idx.toString();
-                const isCorrectOption = idx === currentQ.correctAnswer;
+              {displayOptions.map(({ text: option, originalIdx }, displayIdx) => {
+                const isSelected = userAnswer?.answer === originalIdx.toString();
+                const isCorrectOption = originalIdx === currentQ.correctAnswer;
 
                 let btnClass = 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50';
                 if (hasAnswered) {
@@ -299,8 +344,8 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
 
                 return (
                   <button
-                    key={idx}
-                    onClick={() => handleOptionClick(idx)}
+                    key={originalIdx}
+                    onClick={() => handleOptionClick(originalIdx)}
                     disabled={hasAnswered}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${btnClass}`}
                   >
@@ -311,7 +356,7 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
                         ? 'bg-rose-500 text-white'
                         : 'bg-slate-100 text-slate-600'
                     }`}>
-                      {optionLabels[idx]}
+                      {optionLabels[displayIdx]}
                     </span>
                     <span className="text-base">{option}</span>
                     {hasAnswered && isCorrectOption && (

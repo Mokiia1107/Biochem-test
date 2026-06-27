@@ -1,7 +1,8 @@
-import { ArrowLeft, CheckCircle2, XCircle, HelpCircle, BookOpen, Award, TrendingUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, HelpCircle, BookOpen, Award, TrendingUp, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { choiceQuestions, definitionQuestions, essayQuestions } from '@/data/questions';
+import { exportWrongQuestions } from '@/lib/exportWrongQuestions';
 import type { PageRoute, UserAnswer } from '@/types';
 
 interface StatsPageProps {
@@ -164,10 +165,22 @@ export function StatsPage({ saveMgr, onNavigate }: StatsPageProps) {
         {wrongQuestions.length > 0 && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <XCircle className="w-4 h-4 text-rose-500" />
-                错题回顾（{wrongQuestions.length}题）
-              </CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <XCircle className="w-4 h-4 text-rose-500" />
+                  错题回顾（{wrongQuestions.length}题）
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    exportWrongQuestions(wrongQuestions, answers, saveMgr.activeSlot?.name)
+                  }
+                >
+                  <Download className="w-4 h-4 mr-1" />
+                  导出错题
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
