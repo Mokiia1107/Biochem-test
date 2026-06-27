@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { essayQuestions } from '@/data/questions';
+import { sci, sciHtml } from '@/lib/sciText';
 import { seededShuffle } from '@/lib/utils';
 import type { PageRoute, UserAnswer } from '@/types';
 
@@ -264,7 +265,7 @@ export function EssayQuiz({ quiz, onNavigate, saveMgr }: EssayQuizProps) {
               </Badge>
             </div>
             <h2 className="text-lg font-semibold text-slate-800 leading-relaxed mb-6">
-              {currentQ.question}
+              {sci(currentQ.question)}
             </h2>
 
             {!showAnswer ? (
@@ -310,9 +311,7 @@ export function EssayQuiz({ quiz, onNavigate, saveMgr }: EssayQuizProps) {
                   <div
                     className="text-amber-900 leading-relaxed text-sm"
                     dangerouslySetInnerHTML={{
-                      __html: currentQ.answer
-                        .replace(/\*\*(.+?)\*\*/g, '<strong class="text-amber-700">$1</strong>')
-                        .replace(/\n/g, '<br/>'),
+                      __html: sciHtml(currentQ.answer, 'text-amber-700'),
                     }}
                   />
                 </div>

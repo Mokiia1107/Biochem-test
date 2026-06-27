@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { choiceQuestions } from '@/data/questions';
+import { sci, sciHtml } from '@/lib/sciText';
 import { seededShuffle } from '@/lib/utils';
 import type { PageRoute, UserAnswer } from '@/types';
 
@@ -318,7 +319,7 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
                   )}
                 </div>
                 <h3 className="text-lg font-medium text-slate-800 leading-relaxed">
-                  {currentQ.question}
+                  {sci(currentQ.question)}
                 </h3>
               </div>
             </div>
@@ -358,7 +359,7 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
                     }`}>
                       {optionLabels[displayIdx]}
                     </span>
-                    <span className="text-base">{option}</span>
+                    <span className="text-base">{sci(option)}</span>
                     {hasAnswered && isCorrectOption && (
                       <CheckCircle2 className="w-5 h-5 text-emerald-500 ml-auto shrink-0" />
                     )}
@@ -383,8 +384,7 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
               <div
                 className="text-slate-700 leading-relaxed text-sm"
                 dangerouslySetInnerHTML={{
-                  __html: currentQ.explanation.replace(/\*\*(.+?)\*\*/g, '<strong class="text-indigo-700">$1</strong>')
-                    .replace(/\n/g, '<br/>'),
+                  __html: sciHtml(currentQ.explanation),
                 }}
               />
             </CardContent>

@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { definitionQuestions } from '@/data/questions';
+import { sci, sciHtml } from '@/lib/sciText';
 import { seededShuffle } from '@/lib/utils';
 import type { PageRoute, UserAnswer } from '@/types';
 
@@ -259,7 +260,7 @@ export function DefinitionQuiz({ quiz, onNavigate, saveMgr }: DefinitionQuizProp
               )}
             </div>
             <h2 className="text-2xl font-bold text-slate-800 mb-1">
-              {currentQ.term}
+              {sci(currentQ.term)}
             </h2>
             <p className="text-sm text-slate-500 mb-6">请用自己的话解释这个名词</p>
 
@@ -309,9 +310,7 @@ export function DefinitionQuiz({ quiz, onNavigate, saveMgr }: DefinitionQuizProp
                   <div
                     className="text-emerald-900 leading-relaxed text-sm"
                     dangerouslySetInnerHTML={{
-                      __html: currentQ.answer
-                        .replace(/\*\*(.+?)\*\*/g, '<strong class="text-emerald-700">$1</strong>')
-                        .replace(/\n/g, '<br/>'),
+                      __html: sciHtml(currentQ.answer, 'text-emerald-700'),
                     }}
                   />
                 </div>
