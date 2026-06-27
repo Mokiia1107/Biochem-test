@@ -61,4 +61,21 @@ export interface SaveManagerState {
 }
 
 // 页面路由
-export type PageRoute = 'home' | 'choice' | 'definition' | 'essay' | 'stats' | 'saves';
+export type PageRoute =
+  | 'home'
+  | 'choice'
+  | 'choice-wrong'
+  | 'definition'
+  | 'essay'
+  | 'stats'
+  | 'saves';
+
+// 导入合并策略
+export type ImportMergeStrategy = 'replace' | 'merge';
+
+// 导出数据格式
+export interface ExportedSaveData {
+  version: 1;
+  exportedAt: number;
+  slots: SaveSlot[];
+}

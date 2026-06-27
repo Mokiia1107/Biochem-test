@@ -204,7 +204,7 @@ export function StatsPage({ saveMgr, onNavigate }: StatsPageProps) {
               <Button
                 variant="outline"
                 className="mt-4 w-full"
-                onClick={() => onNavigate('choice')}
+                onClick={() => onNavigate('choice-wrong')}
               >
                 <TrendingUp className="w-4 h-4 mr-1" />
                 去刷错题

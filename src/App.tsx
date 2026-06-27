@@ -67,6 +67,17 @@ function App() {
     );
   }
 
+  if (page === 'choice-wrong') {
+    return (
+      <ChoiceQuiz
+        quiz={quiz}
+        onNavigate={setPage}
+        saveMgr={saveMgr}
+        initialFilter="wrong"
+      />
+    );
+  }
+
   if (page === 'definition') {
     return (
       <DefinitionQuiz

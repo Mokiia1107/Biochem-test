@@ -9,6 +9,7 @@ import {
   Dna,
   Beaker,
   Microscope,
+  RotateCcw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -190,9 +191,8 @@ export function HomePage({ saveMgr, onNavigate }: HomePageProps) {
         {/* Navigation Cards */}
         {saveMgr.activeSlot && (
           <div className="grid gap-4 md:grid-cols-3">
-            <button
-              onClick={() => onNavigate('choice')}
-              className="group relative overflow-hidden rounded-2xl bg-white border-2 border-indigo-100 hover:border-indigo-300 transition-all p-6 text-left hover:shadow-lg"
+            <div
+              className="group relative overflow-hidden rounded-2xl bg-white border-2 border-indigo-100 hover:border-indigo-300 transition-all p-6 hover:shadow-lg"
             >
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <ListChecks className="w-24 h-24 text-indigo-600" />
@@ -202,13 +202,26 @@ export function HomePage({ saveMgr, onNavigate }: HomePageProps) {
                   <ListChecks className="w-6 h-6 text-indigo-600" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-800 mb-1">选择题</h3>
-                <p className="text-sm text-slate-500 mb-3">点击作答，即时判错查看解析</p>
-                <div className="flex items-center text-indigo-600 text-sm font-medium">
-                  开始刷题
-                  <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                <p className="text-sm text-slate-500 mb-4">点击作答，即时判错查看解析</p>
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                    onClick={() => onNavigate('choice')}
+                  >
+                    开始刷题
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                    onClick={() => onNavigate('choice-wrong')}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    错题再练
+                  </Button>
                 </div>
               </div>
-            </button>
+            </div>
 
             <button
               onClick={() => onNavigate('definition')}

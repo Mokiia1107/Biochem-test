@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -32,11 +32,12 @@ interface ChoiceQuizProps {
     saveSection: (s: string) => void;
     activeSlot: { name: string } | null;
   };
+  initialFilter?: 'all' | 'wrong' | 'unanswered';
 }
 
-export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
+export function ChoiceQuiz({ quiz, onNavigate, saveMgr, initialFilter }: ChoiceQuizProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [filter, setFilter] = useState<'all' | 'wrong' | 'unanswered'>('all');
+  const [filter, setFilter] = useState<'all' | 'wrong' | 'unanswered'>(initialFilter ?? 'all');
   const [showList, setShowList] = useState(false);
   const [order, setOrder] = useState<'sequential' | 'random'>('sequential');
   const [shuffleSeed, setShuffleSeed] = useState(() => Date.now());
@@ -62,6 +63,16 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
     }
     return orderedBase;
   }, [filter, orderedBase, quiz]);
+
+  // Keep current index in bounds when the filtered question list changes
+  // (e.g. a wrong question is answered correctly and drops out of the list).
+  useEffect(() => {
+    if (questions.length === 0) {
+      setCurrentIdx(0);
+    } else if (currentIdx >= questions.length) {
+      setCurrentIdx(questions.length - 1);
+    }
+  }, [questions.length, currentIdx]);
 
   const currentQ = questions[currentIdx] || choiceQuestions[0];
 
@@ -167,7 +178,7 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
             </Button>
             <div className="hidden sm:flex items-center gap-2 text-sm text-slate-600">
               <GraduationCap className="w-4 h-4" />
-              选择题
+              {filter === 'wrong' ? '错题再练' : '选择题'}
               {saveMgr.activeSlot && (
                 <span className="text-slate-400">· {saveMgr.activeSlot.name}</span>
               )}
@@ -291,8 +302,30 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
           </Button>
         </div>
 
+        {/* Empty state for wrong-practice mode */}
+        {filter === 'wrong' && questions.length === 0 && (
+          <Card className="mb-4 border-emerald-200 bg-emerald-50">
+            <CardContent className="p-8 text-center">
+              <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-emerald-800 mb-1">🎉 当前没有错题</h3>
+              <p className="text-emerald-600 text-sm mb-4">
+                你已经把错题全部攻克，可以去刷全部题目或查看统计。
+              </p>
+              <div className="flex justify-center gap-3">
+                <Button variant="outline" onClick={() => onNavigate('home')}>
+                  返回首页
+                </Button>
+                <Button onClick={() => setFilter('all')}>
+                  刷全部题
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Question Card */}
-        <Card className="mb-4">
+        {questions.length > 0 && (
+          <Card className="mb-4">
           <CardContent className="p-6">
             {/* Question Header */}
             <div className="flex items-start gap-3 mb-6">
@@ -372,9 +405,10 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Explanation Card */}
-        {showExp && (
+        {questions.length > 0 && showExp && (
           <Card className="mb-6 border-l-4 border-l-indigo-500">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-3">
@@ -392,29 +426,31 @@ export function ChoiceQuiz({ quiz, onNavigate, saveMgr }: ChoiceQuizProps) {
         )}
 
         {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={handlePrev}
-            disabled={currentIdx === 0}
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            上一题
-          </Button>
+        {questions.length > 0 && (
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={handlePrev}
+              disabled={currentIdx === 0}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              上一题
+            </Button>
 
-          <span className="text-sm text-slate-500">
-            {currentIdx + 1} / {questions.length}
-          </span>
+            <span className="text-sm text-slate-500">
+              {currentIdx + 1} / {questions.length}
+            </span>
 
-          <Button
-            variant="outline"
-            onClick={handleNext}
-            disabled={currentIdx === questions.length - 1}
-          >
-            下一题
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </div>
+            <Button
+              variant="outline"
+              onClick={handleNext}
+              disabled={currentIdx === questions.length - 1}
+            >
+              下一题
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
       </main>
     </div>
   );

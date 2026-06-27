@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { SaveSlot, SaveManagerState, UserAnswer } from '@/types';
+import type {
+  SaveSlot,
+  SaveManagerState,
+  UserAnswer,
+  ExportedSaveData,
+  ImportMergeStrategy,
+} from '@/types';
+import { exportAllSlots as exportAllSlotsToFile, mergeSlots } from '@/lib/exportImportSlots';
 
 const STORAGE_KEY = 'bio_quiz_saves_v1';
 
@@ -126,6 +133,31 @@ export function useSaveManager() {
     };
   }, [activeSlot]);
 
+  const exportAllSlots = useCallback(() => {
+    exportAllSlotsToFile(state.slots);
+  }, [state.slots]);
+
+  const importSlots = useCallback(
+    (data: ExportedSaveData, strategy: ImportMergeStrategy) => {
+      setState(prev => {
+        if (strategy === 'replace') {
+          return {
+            slots: data.slots,
+            activeSlotId: data.slots.length > 0 ? data.slots[0].id : null,
+          };
+        }
+
+        const merged = mergeSlots(prev.slots, data.slots, strategy);
+        const stillActive = merged.some(s => s.id === prev.activeSlotId);
+        return {
+          slots: merged,
+          activeSlotId: stillActive ? prev.activeSlotId : merged.length > 0 ? merged[0].id : null,
+        };
+      });
+    },
+    []
+  );
+
   return {
     slots: state.slots,
     activeSlotId: state.activeSlotId,
@@ -139,5 +171,7 @@ export function useSaveManager() {
     getAnswerForQuestion,
     getAllAnswers,
     getProgressStats,
+    exportAllSlots,
+    importSlots,
   };
 }

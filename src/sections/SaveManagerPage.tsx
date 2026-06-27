@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   ArrowLeft,
   Plus,
@@ -10,11 +10,14 @@ import {
   Clock,
   Dna,
   AlertTriangle,
+  Download,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +29,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { ImportDialog } from '@/components/ImportDialog';
+import { readImportFile, validateImportData } from '@/lib/exportImportSlots';
+import type { ExportedSaveData } from '@/types';
 
 interface SaveManagerPageProps {
   saveMgr: {
@@ -35,6 +41,8 @@ interface SaveManagerPageProps {
     deleteSlot: (id: string) => void;
     renameSlot: (id: string, name: string) => void;
     activateSlot: (id: string) => void;
+    exportAllSlots: () => void;
+    importSlots: (data: ExportedSaveData, strategy: 'replace' | 'merge') => void;
   };
   onBack: () => void;
 }
@@ -44,6 +52,10 @@ export function SaveManagerPage({ saveMgr, onBack }: SaveManagerPageProps) {
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [importOpen, setImportOpen] = useState(false);
+  const [importData, setImportData] = useState<ExportedSaveData | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleCreate = () => {
     if (newName.trim()) {
@@ -58,6 +70,38 @@ export function SaveManagerPage({ saveMgr, onBack }: SaveManagerPageProps) {
       saveMgr.renameSlot(id, editName.trim());
       setEditingId(null);
     }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setImportError(null);
+    setImportData(null);
+
+    if (!file) return;
+
+    try {
+      const raw = await readImportFile(file);
+      const validated = validateImportData(raw);
+      setImportData(validated);
+      setImportOpen(true);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : '导入失败，请重试。');
+    } finally {
+      // Reset input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleImport = (data: ExportedSaveData, strategy: 'replace' | 'merge') => {
+    saveMgr.importSlots(data, strategy);
+    setImportError(null);
+  };
+
+  const handleImportClose = () => {
+    setImportOpen(false);
+    setImportData(null);
   };
 
   return (
@@ -101,6 +145,49 @@ export function SaveManagerPage({ saveMgr, onBack }: SaveManagerPageProps) {
                   <X className="w-4 h-4" />
                 </Button>
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Data Backup */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Download className="w-4 h-4 text-indigo-600" />
+              数据备份
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-slate-500">
+              将答题记录导出为文件备份，或从备份文件恢复。
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" onClick={() => saveMgr.exportAllSlots()}>
+                <Download className="w-4 h-4 mr-1" />
+                导出全部档案
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-4 h-4 mr-1" />
+                导入档案
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+            </div>
+
+            {importError && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>导入失败</AlertTitle>
+                <AlertDescription>{importError}</AlertDescription>
+              </Alert>
             )}
           </CardContent>
         </Card>
@@ -239,6 +326,14 @@ export function SaveManagerPage({ saveMgr, onBack }: SaveManagerPageProps) {
             )}
           </CardContent>
         </Card>
+
+        <ImportDialog
+          isOpen={importOpen}
+          onClose={handleImportClose}
+          data={importData}
+          existingSlotCount={saveMgr.slots.length}
+          onImport={handleImport}
+        />
       </div>
     </div>
   );
