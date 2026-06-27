@@ -73,7 +73,7 @@ function App() {
         quiz={quiz}
         onNavigate={setPage}
         saveMgr={saveMgr}
-        initialFilter="wrong"
+        mode="wrong-practice"
       />
     );
   }
